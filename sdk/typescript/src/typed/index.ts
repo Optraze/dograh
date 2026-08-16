@@ -4,6 +4,7 @@
 // `TypedNode` discriminated-union that `Workflow.addTyped` accepts.
 
 export { type AgentNode, agentNode } from "./agent-node.js";
+export { type Convomem, convomem } from "./convomem.js";
 export { type EndCall, endCall } from "./end-call.js";
 export { type GlobalNode, globalNode } from "./global-node.js";
 export { type Noveum, noveum } from "./noveum.js";
@@ -16,6 +17,7 @@ export { type Webhook, webhook } from "./webhook.js";
 
 import type {
     AgentNode,
+    Convomem,
     EndCall,
     GlobalNode,
     Noveum,
@@ -28,4 +30,4 @@ import type {
 } from "./index.js";
 
 /** Discriminated union of every generated typed node. */
-export type TypedNode = AgentNode | EndCall | GlobalNode | Noveum | Paygent | Qa | StartCall | Trigger | Tuner | Webhook;
+export type TypedNode = AgentNode | Convomem | EndCall | GlobalNode | Noveum | Paygent | Qa | StartCall | Trigger | Tuner | Webhook;
