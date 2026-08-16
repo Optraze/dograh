@@ -127,6 +127,7 @@
             "group": "Integrations",
             "tag": "NEW",
             "pages": [
+              "integrations/convomem",
               "integrations/mcp",
               "integrations/tuner",
               "integrations/paygent",

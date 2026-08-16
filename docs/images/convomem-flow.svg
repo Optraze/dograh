@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 235" width="820" height="235" font-family="'Comic Sans MS','Chalkboard SE','Comic Neue','Segoe Print',cursive">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <marker id="ah" markerWidth="12" markerHeight="12" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2b2b2b"/>
+    </marker>
+  </defs>
+
+  <!-- paper background (keeps the sketch legible on light or dark pages) -->
+  <rect x="1" y="1" width="818" height="233" rx="16" fill="#faf9f5" stroke="#e5e2d8" stroke-width="1.5"/>
+
+  <!-- shapes: wobble filter for the hand-drawn feel -->
+  <g filter="url(#rough)" fill="none" stroke="#2b2b2b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Caller -->
+    <rect x="30" y="58" width="150" height="82" rx="14"/>
+    <!-- Agent -->
+    <rect x="262" y="48" width="212" height="102" rx="14"/>
+    <!-- ConvoMem memory (cylinder) -->
+    <path d="M560,62 A85,13 0 0 0 730,62 L730,138 A85,13 0 0 1 560,138 Z" fill="#2f6d78" stroke="#204c54"/>
+    <ellipse cx="645" cy="62" rx="85" ry="13" fill="#3a828f" stroke="#204c54"/>
+
+    <!-- arrows -->
+    <path d="M182,99 L258,99" marker-end="url(#ah)"/>
+    <path d="M476,99 L556,99" marker-end="url(#ah)"/>
+    <!-- loop back: makes the next call smarter -->
+    <path d="M645,141 C645,188 645,201 600,201 L150,201 C110,201 105,188 105,141" marker-end="url(#ah)"/>
+  </g>
+
+  <!-- text: crisp (no filter), handwritten font -->
+  <g fill="#2b2b2b" text-anchor="middle">
+    <text x="105" y="94" font-size="17">Caller</text>
+    <text x="105" y="116" font-size="17">dials</text>
+
+    <text x="368" y="86" font-size="17">Agent knows the caller</text>
+    <text x="368" y="110" font-size="13" fill="#5a5a5a">greets by name</text>
+    <text x="368" y="128" font-size="13" fill="#5a5a5a">picks up the history</text>
+
+    <text x="645" y="96" font-size="16" fill="#ffffff">ConvoMem</text>
+    <text x="645" y="116" font-size="16" fill="#ffffff">memory</text>
+
+    <text x="220" y="88" font-size="13" fill="#2f6d78">① recall</text>
+    <text x="516" y="88" font-size="13" fill="#2f6d78">② capture</text>
+    <text x="375" y="223" font-size="13" fill="#5a5a5a" font-style="italic">…makes the next call smarter</text>
+  </g>
+</svg>

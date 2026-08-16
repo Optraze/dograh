@@ -1,0 +1,231 @@
+---
+title: "ConvoMem Integration"
+description: "Give your voice agent long-term memory of every caller — recall before the call, capture after it, and route transfers by what you already know."
+---
+
+<Frame caption="Walkthrough video — coming soon">
+  <img
+    src="/images/convomem-video-coming-soon.png"
+    alt="ConvoMem integration walkthrough video placeholder"
+  />
+</Frame>
+
+{/* When the walkthrough video is ready, replace the Frame above with:
+<iframe
+  width="100%"
+  height="400"
+  src="https://www.youtube.com/embed/VIDEO_ID"
+  title="ConvoMem Integration Walkthrough"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+/>
+*/}
+
+## Overview
+
+[ConvoMem](https://convomem.com) is a customer-memory layer for voice agents. Add the ConvoMem node to a workflow and your agent gains a memory of every caller that **compounds across calls**:
+
+- **Before the call** — Dograh looks the caller up and briefs the agent with what ConvoMem already knows, so it can greet them by name and pick up where the last conversation left off.
+- **After the call** — Dograh sends the transcript back; ConvoMem extracts durable facts about the customer and flags whether the call ended normally or was **escalated** to a human.
+- **During a transfer (optional)** — ConvoMem can pick the *right human* to transfer to based on the caller's history, so the decision is ready the moment the agent hands off.
+
+Unlike an export-only integration, ConvoMem both **enriches** the call before it starts and **learns** from it after it ends — the node is not part of the conversation graph and never needs to be wired to other nodes.
+
+## How it works
+
+<Frame>
+  <img
+    src="/images/convomem-flow.png"
+    alt="ConvoMem memory loop — a caller dials, the agent recalls their history, the conversation is captured into ConvoMem memory, and that makes the next call smarter."
+  />
+</Frame>
+
+Every call makes the next one smarter: capture feeds memory, and memory feeds the next recall.
+
+## Prerequisites
+
+- A [ConvoMem account](https://app.convomem.com) with an **agent** created
+- A ConvoMem **org API key** scoped to that agent (starts with `sk-org-`)
+- A Dograh voice agent workflow
+
+<Note>
+  Scope the API key to a **single ConvoMem agent** so recall and capture always land
+  under the right agent. The same key is reused everywhere in this guide.
+</Note>
+
+## Core setup
+
+<Steps>
+  <Step title="Get your ConvoMem API key">
+    In the ConvoMem dashboard, open **API Keys** and copy your `sk-org-…` key.
+
+    <Frame caption="ConvoMem → API Keys">
+      <img src="/images/convomem-api-keys.png" alt="ConvoMem API Keys page showing an org key" />
+    </Frame>
+  </Step>
+
+  <Step title="Add the ConvoMem node">
+    In your Dograh workflow editor, click **Add node**, scroll to the **Integrations**
+    section, and select **ConvoMem**.
+
+    <Frame caption="Add node → Integrations → ConvoMem">
+      <img src="/images/convomem-add-node-integrations.png" alt="Dograh Integrations panel showing ConvoMem" />
+    </Frame>
+
+    The node appears on your canvas. It is configuration-only — leave it unconnected.
+
+    <Frame caption="The ConvoMem node on the canvas">
+      <img src="/images/convomem-node-canvas.png" alt="ConvoMem node placed on the workflow canvas" />
+    </Frame>
+  </Step>
+
+  <Step title="Configure the node">
+    Open the node and set:
+
+    - **Enabled** — turn ConvoMem on for this call.
+    - **API Key** — your `sk-org-…` key from step 1.
+    - **Live capture** — stream the transcript *during* the call so memory stays fresh mid-conversation and unlocks real-time handoff routing. See [Live capture](#live-capture-and-real-time-routing).
+
+    <Frame caption="Edit ConvoMem — Enabled · API Key · Live capture">
+      <img src="/images/convomem-edit-modal.png" alt="Dograh Edit ConvoMem modal with API key and live capture" />
+    </Frame>
+
+    <Note>
+      Enabling the node **is** the intent — pre-call recall and post-call capture both
+      run automatically. There are no separate toggles to switch them on.
+    </Note>
+
+    Click **Save**, then **Publish** your workflow.
+  </Step>
+</Steps>
+
+<Tip>
+  Cloud ConvoMem needs no URL — the node talks to `https://api.convomem.com` by
+  default. Self-hosting? Point Dograh at your instance with the `CONVOMEM_BASE_URL`
+  environment variable to keep caller data in-tenant.
+</Tip>
+
+## What gets remembered
+
+ConvoMem extracts **durable facts about the customer**, not a raw transcript dump:
+
+- Only real conversation turns are used — the system prompt and the injected memory briefing are never fed back into memory.
+- Agent-only chatter is ignored, so the agent's own words are never mistaken for customer facts.
+- A transferred call is flagged **ESCALATED**; a normal hang-up is flagged **COMPLETED**. Memory extraction is identical either way.
+- PII handling and retention are governed by your ConvoMem agent's **Privacy & PII** settings.
+
+<Frame caption="A captured, escalated conversation with extracted memories">
+  <img src="/images/convomem-conversation-escalated.png" alt="ConvoMem conversation marked ESCALATED with extracted memories" />
+</Frame>
+
+## Verify
+
+Make a test call, then:
+
+1. Open **Conversations** in ConvoMem — the call should appear with its extracted memories within a few moments.
+2. Call again as the **same caller** — the agent should greet you by name and reference prior context before you say anything. That confirms pre-call recall is working end to end.
+
+## Advanced: memory-aware transfer routing
+
+Instead of transferring to one fixed number, ConvoMem can choose the **destination that fits the caller** — e.g. send a billing-refund caller to Senior Support and everyone else to the general line. Dograh's Transfer Call tool supports a [**dynamic resolver**](/voice-agent/tools/call-transfer#dynamic-http-resolver), and ConvoMem exposes a resolver endpoint that returns the destination in Dograh's exact format.
+
+<Steps>
+  <Step title="Configure destinations in ConvoMem">
+    In ConvoMem, open **Agent Settings → Handoff Routing** and add your destinations.
+    Give each a plain-English description of **when it should be used**, and mark one
+    as **Default**. When a call ends (or, with real-time routing, during it), ConvoMem
+    picks the destination that best fits that customer's history.
+
+    <Frame caption="Agent Settings → Handoff Routing">
+      <img src="/images/convomem-handoff-routing.png" alt="ConvoMem Handoff Routing with destinations and descriptions" />
+    </Frame>
+  </Step>
+
+  <Step title="Create a dynamic Transfer Call tool in Dograh">
+    Under **Tools → Create New Tool → Transfer Call**, set **Destination source** to
+    **Dynamic (HTTP resolver)** and configure:
+
+    | Field | Value |
+    |---|---|
+    | **Resolver URL** | `https://api.convomem.com/api/v1/handoff/route?format=dograh` |
+    | **Header** | `X-API-Key: sk-org-…` (the same agent-scoped key) |
+    | **Timeout** | `5000` ms |
+    | **Wait message** | e.g. *"One moment while I connect you to the right person."* |
+    | **Preset parameter** | `phone` → the caller's number (see the direction note below) |
+
+    <Frame caption="Transfer Call tool → Dynamic resolver pointed at ConvoMem">
+      <img src="/images/convomem-transfer-tool-dynamic.png" alt="Dograh Transfer Call tool configured with the ConvoMem dynamic resolver" />
+    </Frame>
+
+    <Warning>
+      **Send the customer's number, not your Twilio line.** The correct template
+      depends on call direction:
+
+      - **Inbound** (they call you): `{{initial_context.caller_number}}`
+      - **Outbound** (you dial them): `{{initial_context.phone_number}}`
+
+      Using the wrong one sends your own line to ConvoMem, which can't identify the
+      caller and falls back to the **Default** destination — a silent mis-route.
+    </Warning>
+  </Step>
+
+  <Step title="Attach the tool and test">
+    Add the transfer tool to the agent node(s) that should be able to hand off.
+
+    <Frame caption="Transfer tool attached to an agent node">
+      <img src="/images/convomem-transfer-tool-attached.png" alt="Agent node with the ConvoMem-backed transfer tool attached" />
+    </Frame>
+
+    Before a live call, dry-run it in ConvoMem under **Handoff Routing → Test a customer**
+    — it shows exactly where a given caller would route right now, and why.
+
+    <Frame caption="Handoff Routing → Test a customer">
+      <img src="/images/convomem-test-customer.png" alt="ConvoMem Test a customer panel showing the resolved destination" />
+    </Frame>
+  </Step>
+</Steps>
+
+<Note>
+  ConvoMem's resolver **always answers**, even if it can't identify the caller — it
+  returns the agent's Default destination rather than failing the transfer, so a caller
+  on hold is never dropped.
+</Note>
+
+## Live capture and real-time routing
+
+By default, ConvoMem captures the transcript **once, at the end of the call**. Turn on
+**Live capture** in the node to also stream the transcript *during* the call
+(fire-and-forget — it never blocks the conversation). The end-of-call capture still runs
+as the source of truth.
+
+Live capture unlocks ConvoMem's **Real-time routing**: with it enabled in
+**Agent Settings → Handoff Routing**, ConvoMem re-evaluates the best transfer destination
+*as the conversation unfolds*, so the answer is already correct the moment the agent
+transfers — not just when the call ends.
+
+<Frame caption="Real-time routing toggle (requires live capture)">
+  <img src="/images/convomem-realtime-routing.png" alt="ConvoMem Real-time routing toggle enabled" />
+</Frame>
+
+## Disabling the integration
+
+Open the ConvoMem node and toggle **Enabled** off. Your API key is preserved — toggle it
+back on anytime to resume recall and capture.
+
+## Troubleshooting
+
+| Issue | Solution |
+|---|---|
+| Agent doesn't recognize a returning caller | Confirm the API key is scoped to the **same** ConvoMem agent used for capture, and that the caller's number reaches ConvoMem (see the direction note above). |
+| Nothing appears in ConvoMem after a call | Make sure the workflow is **published**, not just saved, and that the ConvoMem node is **Enabled**. |
+| Transfers always go to the Default destination | The resolver isn't receiving the customer's number — check the `phone` preset parameter matches your call direction (`caller_number` inbound / `phone_number` outbound). |
+| Wrong department on transfer | Refine the **"when to use"** descriptions in ConvoMem → Handoff Routing so they clearly distinguish the destinations. |
+| Real-time routing has no effect | It requires **Live capture** enabled on the ConvoMem node. |
+| Call captured under the wrong number | Confirm call direction — inbound callers are `caller_number`, outbound customers are `phone_number`. |
+
+## Learn more
+
+- [ConvoMem](https://convomem.com) — Customer memory and intelligence for voice
+- [ConvoMem dashboard](https://app.convomem.com) — Manage agents, memory, and handoff routing
+- [Call Transfer tool](/voice-agent/tools/call-transfer) — Dograh's static and dynamic-resolver transfer reference
