@@ -86,9 +86,10 @@ Every call makes the next one smarter: capture feeds memory, and memory feeds th
     - **Enabled** — turn ConvoMem on for this call.
     - **API Key** — your `sk-org-…` key from step 1.
     - **Live capture** — stream the transcript *during* the call so memory stays fresh mid-conversation and unlocks real-time handoff routing. See [Live capture](#live-capture-and-real-time-routing).
+    - **Memory budget (tokens)** — optional cap on how much recalled memory is injected into the prompt. Leave it empty to use ConvoMem's default (clamped server-side to 800). Lower it to keep the agent tighter on its node instructions.
 
-    <Frame caption="Edit ConvoMem — Enabled · API Key · Live capture">
-      <img src="/images/convomem-edit-modal.png" alt="Dograh Edit ConvoMem modal with API key and live capture" />
+    <Frame caption="Edit ConvoMem — Enabled · API Key · Live capture · Memory budget">
+      <img src="/images/convomem-edit-modal.png" alt="Dograh Edit ConvoMem modal showing the enabled toggle, API key, live capture, and memory budget fields" />
     </Frame>
 
     <Note>
@@ -111,7 +112,7 @@ Every call makes the next one smarter: capture feeds memory, and memory feeds th
 ConvoMem extracts **durable facts about the customer**, not a raw transcript dump:
 
 - Only real conversation turns are used — the system prompt and the injected memory briefing are never fed back into memory.
-- Agent-only chatter is ignored, so the agent's own words are never mistaken for customer facts.
+- A call the customer never spoke on produces nothing — ConvoMem skips extraction entirely rather than inventing facts from the agent's own turns.
 - A transferred call is flagged **ESCALATED**; a normal hang-up is flagged **COMPLETED**. Memory extraction is identical either way.
 - PII handling and retention are governed by your ConvoMem agent's **Privacy & PII** settings.
 
